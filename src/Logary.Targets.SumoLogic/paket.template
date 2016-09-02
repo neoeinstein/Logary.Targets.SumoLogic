@@ -1,0 +1,25 @@
+type project
+title
+    Logary.Targets.SumoLogic
+owners
+    Marcus Griep
+authors
+    Marcus Griep
+projectUrl
+    https://github.com/neoeinstein/Logary.Targets.SumoLogic
+iconUrl
+    https://raw.githubusercontent.com/neoeinstein/Logary.Targets.SumoLogic/master/docs/files/img/logo.png
+licenseUrl
+    https://github.com/neoeinstein/Logary.Targets.SumoLogic/blob/master/LICENSE.txt
+requireLicenseAcceptance
+    false
+copyright
+    Copyright 2016
+tags
+    sumologic logary logging log logs metrics
+summary
+    A Logary target for the SumoLogic log management and data analytics service
+description
+    This package provides a target for the Logary logging library to push logs to a SumoLogic HTTP source collector.
+
+
