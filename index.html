@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Logary.Targets.SumoLogic
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="A Logary target for the SumoLogic log management and data analytics service"/>
+    <meta name="author" content="Marcus Griep"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/Logary.Targets.SumoLogic/content/style.css" />
+    <script type="text/javascript" src="/Logary.Targets.SumoLogic/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/Logary.Targets.SumoLogic/index.html">Logary.Targets.SumoLogic</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+<h1><a name="Logary-Targets-SumoLogic" class="anchor" href="#Logary-Targets-SumoLogic">Logary.Targets.SumoLogic</a></h1>
+<p>A <a href="https://logary.github.io/">Logary</a> target for the <a href="https://www.sumologic.com/">SumoLogic</a> log management and data analytics service</p>
+<div class="row">
+  <div class="span1"></div>
+  <div class="span6">
+    <div class="well well-small" id="nuget">
+      The Logary.Targets.SumoLogic library can be <a href="https://nuget.org/packages/Logary.Targets.SumoLogic">installed from NuGet</a>:
+      <pre>PM> Install-Package Logary.Targets.SumoLogic</pre>
+    </div>
+  </div>
+  <div class="span1"></div>
+</div>
+<h2><a name="Example" class="anchor" href="#Example">Example</a></h2>
+<p>This example demonstrates configuring the target with <a href="https://logary.github.io/">Logary</a>.</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="prep">#r</span> <span class="s">&quot;Logary&quot;</span>
+<span class="prep">#r</span> <span class="s">&quot;Logary.Targets.SumoLogic&quot;</span>
+<span class="k">open</span> <span class="i">Hopac</span>
+<span class="k">open</span> <span class="i">Logary</span>
+<span class="k">open</span> <span class="i">Logary</span><span class="o">.</span><span class="i">Configuration</span>
+<span class="k">open</span> <span class="i">Logary</span><span class="o">.</span><span class="i">Targets</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">sumoEndpoint</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">System</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="t">Uri</span> <span class="s">&quot;https://endpoint1.collection.us2.sumologic.com/receiver/v1/http/HTTP_COLLECTOR_ENDPOINT&quot;</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="i">li</span> <span class="o">=</span>
+  <span class="i">Promise</span><span class="o">.</span><span class="i">start</span>
+    ( <span class="i">withLogary</span> <span class="s">&quot;Example for using SumoLogic target&quot;</span>
+      ( <span class="i">withTargets</span> [
+          <span class="i">SumoLogic</span><span class="o">.</span><span class="i">create</span> (<span class="i">SumoLogicConf</span><span class="o">.</span><span class="i">create</span> <span onmouseout="hideTip(event, 'fs1', 5)" onmouseover="showTip(event, 'fs1', 5)" class="i">sumoEndpoint</span> <span class="i">ExpandTemplates</span>) <span class="s">&quot;sumologic&quot;</span>
+        ] <span class="o">&gt;</span><span class="o">&gt;</span>
+        <span class="i">withRules</span> [
+          <span class="i">Rule</span><span class="o">.</span><span class="i">createForTarget</span> <span class="s">&quot;sumologic&quot;</span>
+        ]
+      )
+    )
+</code></pre></td>
+</tr>
+</table>
+<p>Check out the <a href="https://logary.github.io/">Logary</a> docs for more information.</p>
+<h2><a name="Samples-amp-documentation" class="anchor" href="#Samples-amp-documentation">Samples &amp; documentation</a></h2>
+<p>The library comes with comprehensible documentation automatically generated from <code>*.fsx</code> files in <a href="https://github.com/fsprojects/Logary.Targets.SumoLogic/tree/master/docs/content">the content folder</a>.
+The API reference is automatically generated from Markdown comments in the library implementation.</p>
+<ul>
+<li>
+<a href="reference/index.html">API Reference</a> contains automatically generated documentation for all types, modules
+and functions in the library. This includes additional brief samples on using most of the
+functions.
+</li>
+</ul>
+<h2><a name="Contributing-and-copyright" class="anchor" href="#Contributing-and-copyright">Contributing and copyright</a></h2>
+<p>The project is hosted on <a href="https://github.com/fsprojects/Logary.Targets.SumoLogic">GitHub</a> where you can <a href="https://github.com/fsprojects/Logary.Targets.SumoLogic/issues">report issues</a>, fork
+the project and submit pull requests. If you're adding a new public API, please also
+consider adding <a href="https://github.com/fsprojects/Logary.Targets.SumoLogic/tree/master/docs/content">samples</a> that can be turned into a documentation. You might
+also want to read the <a href="https://github.com/fsprojects/Logary.Targets.SumoLogic/blob/master/README.md">library design notes</a> to understand how it works.</p>
+<p>The library is available under the Apache 2.0 license, which allows modification and
+redistribution for both commercial and non-commercial purposes. For more information see the
+<a href="https://github.com/fsprojects/Logary.Targets.SumoLogic/blob/master/LICENSE.txt">License file</a> in the GitHub repository.</p>
+
+<div class="tip" id="fs1">val sumoEndpoint : System.Uri<br /><br />Full name: Index.sumoEndpoint</div>
+<div class="tip" id="fs2">namespace System</div>
+<div class="tip" id="fs3">Multiple items<br />type Uri =<br />&#160;&#160;new : uriString:string -&gt; Uri + 5 overloads<br />&#160;&#160;member AbsolutePath : string<br />&#160;&#160;member AbsoluteUri : string<br />&#160;&#160;member Authority : string<br />&#160;&#160;member DnsSafeHost : string<br />&#160;&#160;member Equals : comparand:obj -&gt; bool<br />&#160;&#160;member Fragment : string<br />&#160;&#160;member GetComponents : components:UriComponents * format:UriFormat -&gt; string<br />&#160;&#160;member GetHashCode : unit -&gt; int<br />&#160;&#160;member GetLeftPart : part:UriPartial -&gt; string<br />&#160;&#160;...<br /><br />Full name: System.Uri<br /><br />--------------------<br />System.Uri(uriString: string) : unit<br />System.Uri(uriString: string, uriKind: System.UriKind) : unit<br />System.Uri(baseUri: System.Uri, relativeUri: string) : unit<br />System.Uri(baseUri: System.Uri, relativeUri: System.Uri) : unit</div>
+<div class="tip" id="fs4">val li : obj<br /><br />Full name: Index.li</div>
+
+        </div>
+        <div class="span3">
+          <img src="/Logary.Targets.SumoLogic/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">Logary.Targets.SumoLogic</li>
+            <li><a href="/Logary.Targets.SumoLogic/index.html">Home page</a></li>
+            <li><a href="http://nuget.org/packages/Logary.Targets.SumoLogic"><img src="https://img.shields.io/nuget/v/Logary.Targets.SumoLogic.svg?maxAge=3600" alt="NuGet"></a></li>
+            <li><a href="https://travis-ci.org/neoeinstein/Logary.Targets.SumoLogic"><img src="https://img.shields.io/travis/neoeinstein/Logary.Targets.SumoLogic/master.svg?maxAge=3600" alt="Travis branch"></a></li>
+            <li class="divider"></li>
+            <li><a href="http://nuget.org/packages/Logary.Targets.SumoLogic">Get Library via NuGet</a></li>
+            <li><a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic">Source Code on GitHub</a></li>
+            <li><a href="/Logary.Targets.SumoLogic/license.html">License</a></li>
+            <li><a href="/Logary.Targets.SumoLogic/release-notes.html">Release Notes</a></li>
+            
+            <li class="nav-header">Documentation</li>
+            <li><a href="/Logary.Targets.SumoLogic/reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>
