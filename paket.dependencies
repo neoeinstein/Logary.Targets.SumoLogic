@@ -1,7 +1,7 @@
 source https://nuget.org/api/v2
 
 nuget FSharp.Core >= 3.1.2.5 redirects: force
-nuget Logary ~> 4.0
+nuget Logary >= 4.0.110 < 5
 nuget Http.Fs ~> 4.0
 
 group Build

@@ -145,40 +145,69 @@ module Impl =
       Response.readBodyAsString resp
       >>= handleResponseBody ri reqs resp
 
-  let messagesReceivedPointName = PointName [| "Logary"; "Targets"; "SumoLogic"; "messagesReceived" |]
+  let buildBody conf =
+    Array.choose ^ extractMessage conf
+    >> String.concat "\n"
+    >> BodyString
 
-  let loop conf (ri: RuntimeInfo) (requests: RingBuffer<_>) (shutdown: Ch<_>) =
+  let loop conf (ri: RuntimeInfo) (messages: RingBuffer<_>) (shutdown: Ch<_>) (saveWill:obj -> Job<unit>) (lastWill: obj option) =
     let baseRequest =
       Request.create Post conf.endpoint
       |> Request.keepAlive true
       |> Request.setHeader (RequestHeader.ContentType ^ ContentType.create ("application", "json"))
       |> Request.setHeader userAgent
 
-    let rec loop () : Job<unit> =
+    let buildRequest msgs =
+      baseRequest |> Request.body ^ buildBody conf msgs
+
+    let sendBatch batch : Job<unit> =
+      Message.eventVerbose "SumoLogic target preparing to send batch of {count} messages to SumoLogic"
+      |> Message.setField "count" ^ Array.length batch
+      |> Logger.log ri.logger
+      >>-. buildRequest batch
+      >>= getResponse
+      >>= handleResponse ri batch
+
+    let rec init () : Job<unit> =
+      match Option.map unbox lastWill with
+      | Some (msgs, idx, recovered) ->
+        Message.eventDebug "SumoLogic target failed; starting recovery"
+        |> Logger.log ri.logger
+        >>=. recover msgs idx recovered
+      | None ->
+        Message.eventVerbose "Starting SumoLogic target"
+        |> Logger.log ri.logger
+        >>=. loop ()
+    and recover msgs idx recovered : Job<unit> =
+      if idx >= Array.length msgs then
+        Message.eventDebug "SumoLogic target recovery complete; recovered {recovered} of {count} messages"
+        |> Message.setField "recovered" recovered
+        |> Message.setField "count" ^ Array.length msgs
+        |> Logger.log ri.logger
+        >>=. loop ()
+      else
+        let nextIdx = idx + 1
+        Message.eventDebug "SumoLogic target recovery in progress; retrying message {index} of {count}"
+        |> Message.setField "index" (idx + 1)
+        |> Message.setField "count" ^ Array.length msgs
+        |> Logger.log ri.logger
+        >>=. saveWill ^ box ^ (msgs, nextIdx, recovered)
+        >>=. sendBatch [| msgs.[idx] |]
+        >>=. saveWill ^ box ^ (msgs, nextIdx, recovered + 1)
+        >>=. recover msgs nextIdx (recovered + 1)
+    and loop () : Job<unit> =
       asJob ^ Alt.choose
         [ shutdown ^=> fun ack -> ack *<= ()
 
-          RingBuffer.takeBatch (uint32 conf.batchSize) requests ^=> fun reqs ->
-            Message.gauge messagesReceivedPointName (Value.Int64 ^ int64 ^ Array.length reqs)
-            |> ri.logger.logSimple
-
-            let body =
-              reqs
-              |> Seq.choose ^ extractMessage conf
-              |> String.concat "\n"
-
-            let req =
-              baseRequest
-              |> Request.body (BodyString body)
-
-            getResponse req
-            >>= handleResponse ri reqs
+          RingBuffer.takeBatch (uint32 conf.batchSize) messages ^=> fun msgs ->
+            saveWill ^ box ^ (msgs, 0, 0)
+            >>=. sendBatch msgs
             >>= loop
         ]
-    loop ()
+    init ()
 
 module SumoLogic =
-  let create (conf : SumoLogicConf) : string -> TargetConf = TargetUtils.stdNamedTarget ^ Impl.loop conf
+  let create (conf : SumoLogicConf) : string -> TargetConf = TargetUtils.willAwareNamedTarget ^ Impl.loop conf
 
 [<assembly:System.Runtime.CompilerServices.InternalsVisibleTo("Logary.Targets.SumoLogic.Tests")>]
 do ()

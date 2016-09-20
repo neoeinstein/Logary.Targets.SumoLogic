@@ -7,7 +7,7 @@ NUGET
     Http.fs (4.0.2)
       FSharp.Core (>= 3.1.2.5)
       Hopac (>= 0.3.13)
-    Logary (4.0.101)
+    Logary (4.0.110)
       FParsec (>= 1.0.2)
       FSharp.Core (>= 4.0.0.1)
       Hopac (>= 0.3.13)
