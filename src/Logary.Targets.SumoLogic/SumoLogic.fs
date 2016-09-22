@@ -19,6 +19,7 @@ type SumoLogicConf =
     templateHandling : TemplateHandlingConf
     batchSize : uint16
     maxRecoveryAttempts : uint32
+    timeoutMs : uint32
   }
 and TemplateHandlingConf =
   | ExpandTemplates
@@ -31,6 +32,7 @@ module SumoLogicConf =
       templateHandling = IgnoreTemplates
       batchSize = 100us
       maxRecoveryAttempts = 3u
+      timeoutMs = 500u
     }
 
   let create endpoint templateHandling =
@@ -184,7 +186,7 @@ module Impl =
       |> Logger.log ri.logger
       |> Job.start
       >>- fun () -> buildRequest batch
-      >>= getResponse
+      >>= (fun req -> timeOutMillis (int conf.timeoutMs) ^=>. Job.raises (exn "SumoLogic target timed out") <|> getResponse req)
       >>= handleResponse ri batch
 
     let saveWill : SumoState -> Job<unit> = box >> saveWill

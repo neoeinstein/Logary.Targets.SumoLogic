@@ -24,6 +24,8 @@ type SumoLogicConf =
     /// The maximum number of failures to be tolerated before dropping
     /// all messages in a batch and proceeding to accept a new batch
     maxRecoveryAttempts : uint32
+    /// The timeout when attempting to send a batch of messages to SumoLogic
+    timeoutMs : uint32
   }
 
 /// Utilities for configuring a SumoLogic Logary target
