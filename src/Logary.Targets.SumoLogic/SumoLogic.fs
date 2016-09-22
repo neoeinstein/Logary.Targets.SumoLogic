@@ -91,7 +91,7 @@ module Serialization =
 
   let fieldToJson (Field (v,uO)) = fieldlikeToJson v uO
 
-  let messageToJson templateHandling (msg:Message) : Json =
+  let messageToJson serviceName templateHandling (msg:Message) : Json =
     Json.Object ^ Map.ofList
       ( [ "level", Json.serialize msg.level
           "fields", Json.Object (msg.fields |> Map.toArray |> Array.map (fun (k,v) -> PointName.format k, fieldToJson v) |> Map.ofArray)
@@ -99,11 +99,12 @@ module Serialization =
           "context", Json.Object ^ Map.map (fun _ -> valueToJson) msg.context
           "name", Json.String ^ PointName.format msg.name
           "timestamp", Json.Number ^ decimal msg.timestamp
+          "serviceName", Json.String ^ serviceName
         ] @ pointValueToJson templateHandling msg.fields msg.value
       )
 
-  let serializeMessage templateHandling =
-    messageToJson templateHandling
+  let serializeMessage serviceName templateHandling =
+    messageToJson serviceName templateHandling
     >> Json.format
 
 module Impl =
@@ -137,8 +138,8 @@ module Impl =
     | Flush (ackCh, nack) ->
       asJob (Ch.give ackCh () <|> nack)
 
-  let extractMessage conf = function
-    | Log (msg, _) -> Some ^ Serialization.serializeMessage conf.templateHandling msg
+  let extractMessage serviceName conf = function
+    | Log (msg, _) -> Some ^ Serialization.serializeMessage serviceName conf.templateHandling msg
     | Flush _ -> None
 
   let sumoLogicLog = PointName [| "Logary"; "Targets"; "SumoLogic" |]
@@ -165,8 +166,8 @@ module Impl =
       Response.readBodyAsString resp
       >>= handleResponseBody ri reqs resp
 
-  let buildBody conf =
-    Array.choose ^ extractMessage conf
+  let buildBody serviceName conf =
+    Array.choose ^ extractMessage serviceName conf
     >> String.concat "\n"
     >> BodyString
 
@@ -178,7 +179,7 @@ module Impl =
       |> Request.setHeader userAgent
 
     let buildRequest msgs =
-      baseRequest |> Request.body ^ buildBody conf msgs
+      baseRequest |> Request.body ^ buildBody ri.serviceName conf msgs
 
     let sendBatch batch : Job<unit> =
       Message.eventVerbose "SumoLogic target preparing to send batch of {count} messages to SumoLogic"
