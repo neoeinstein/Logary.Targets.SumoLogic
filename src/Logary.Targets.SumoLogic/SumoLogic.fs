@@ -208,7 +208,7 @@ module Impl =
       let nextRecoveryState =
         match health with
         | Live -> { Index = 0u; FailedAttempts = 0u; Recovered = 0u }
-        | Recovering rs -> { rs with Index = rs.Index + 1u; FailedAttempts = rs.FailedAttempts + 1u }
+        | Recovering rs -> { rs with Index = rs.Index + 1u; FailedAttempts = rs.FailedAttempts }
       if nextRecoveryState.Index >= uint32 ^ Array.length msgs then
         Message.eventDebug "SumoLogic target recovery complete; recovered {recovered} of {count} messages"
         |> Message.setField "attempts" nextRecoveryState.FailedAttempts
@@ -234,7 +234,7 @@ module Impl =
         |> Message.setField "count" ^ Array.length msgs
         |> Logger.log ri.logger
         |> Job.start
-        >>= fun () -> saveWill ^ { s with Health = Recovering nextRecoveryState }
+        >>= fun () -> saveWill ^ { s with Health = Recovering { nextRecoveryState with FailedAttempts = nextRecoveryState.FailedAttempts + 1u } }
         >>= fun () -> sendBatch [| msgs.[int nextRecoveryState.Index] |]
         >>= fun () -> saveWill ^ nextStateIfSuccessful
         >>= fun () -> recover nextStateIfSuccessful
