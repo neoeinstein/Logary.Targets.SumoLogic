@@ -40,6 +40,8 @@
   <span>Namespace: Logary.Targets</span><br />
 </p>
 <div class="xmldoc">
+<p>Configuration for a SumoLogic Logary target</p>
+
 </div>
   <h3>Record Fields</h3>
   <table class="table table-bordered member-list">
@@ -58,11 +60,13 @@
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic/tree/master/src/Logary.Targets.SumoLogic/SumoLogic.fsi#L13-13" class="github-link">
+            <a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic/tree/master/src/Logary.Targets.SumoLogic/SumoLogic.fsi#L23-23" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>The maximum number of messages to process at one time</p>
+
+
         </td>
       </tr>
       <tr>
@@ -76,29 +80,75 @@
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic/tree/master/src/Logary.Targets.SumoLogic/SumoLogic.fsi#L11-11" class="github-link">
+            <a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic/tree/master/src/Logary.Targets.SumoLogic/SumoLogic.fsi#L19-19" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>The SumoLogic HTTP Source endpoint. For more information
+see the <a href="https://help.sumologic.com/Send_Data/Sources/HTTP_Source">SumoLogic documentation</a></p>
+
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '6', 6)" onmouseover="showTip(event, '6', 6)">
-            templateHandling
+            maxRecoveryAttempts
           </code>
           <div class="tip" id="6">
+            <strong>Signature:</strong> uint32<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic/tree/master/src/Logary.Targets.SumoLogic/SumoLogic.fsi#L26-26" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>The maximum number of failures to be tolerated before dropping
+all messages in a batch and proceeding to accept a new batch</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '7', 7)" onmouseover="showTip(event, '7', 7)">
+            templateHandling
+          </code>
+          <div class="tip" id="7">
             <strong>Signature:</strong> TemplateHandlingConf<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic/tree/master/src/Logary.Targets.SumoLogic/SumoLogic.fsi#L12-12" class="github-link">
+            <a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic/tree/master/src/Logary.Targets.SumoLogic/SumoLogic.fsi#L21-21" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>Determines how the target will handle message templates</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '8', 8)" onmouseover="showTip(event, '8', 8)">
+            timeoutMs
+          </code>
+          <div class="tip" id="8">
+            <strong>Signature:</strong> uint32<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="https://github.com/neoeinstein/Logary.Targets.SumoLogic/tree/master/src/Logary.Targets.SumoLogic/SumoLogic.fsi#L28-28" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>The timeout when attempting to send a batch of messages to SumoLogic</p>
+
+
         </td>
       </tr>
     </tbody>
