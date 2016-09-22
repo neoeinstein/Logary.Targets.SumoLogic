@@ -18,6 +18,7 @@ type SumoLogicConf =
     endpoint : Uri
     templateHandling : TemplateHandlingConf
     batchSize : uint16
+    maxRecoveryAttempts : uint32
   }
 and TemplateHandlingConf =
   | ExpandTemplates
@@ -29,6 +30,7 @@ module SumoLogicConf =
     { endpoint = Uri "http://localhost/"
       templateHandling = IgnoreTemplates
       batchSize = 100us
+      maxRecoveryAttempts = 3u
     }
 
   let create endpoint templateHandling =
@@ -103,6 +105,20 @@ module Serialization =
     >> Json.format
 
 module Impl =
+  type SumoState =
+    { LastBatch : TargetMessage []
+      Health : Health
+    }
+    static member empty = { LastBatch = Array.empty; Health = Live }
+  and Health =
+    | Live
+    | Recovering of RecoveryState
+  and RecoveryState =
+    { Index : uint32
+      FailedAttempts : uint32
+      Recovered : uint32
+    }
+
   let userAgent =
     UserAgent ^ sprintf "Logary.Targets.SumoLogic v%s"
 #if INTERACTIVE
@@ -133,12 +149,14 @@ module Impl =
       |> Message.setField "body" body
       |> Message.setName sumoLogicLog
       |> Logger.log ri.logger
+      |> Job.start
       >>- fun () -> failwithf "got response code %i" resp.statusCode
     else
       Message.eventVerbose "Successfully sent batch of {count} messages to SumoLogic"
       |> Message.setField "count" ^ Array.length reqs
       |> Logger.log ri.logger
-      >>=. Seq.iterJobIgnore requestAckJobCreator reqs
+      |> Job.start
+      >>= fun () -> Seq.iterJobIgnore requestAckJobCreator reqs
 
   let handleResponse (ri:RuntimeInfo) reqs =
     Job.useIn ^ fun resp ->
@@ -164,44 +182,68 @@ module Impl =
       Message.eventVerbose "SumoLogic target preparing to send batch of {count} messages to SumoLogic"
       |> Message.setField "count" ^ Array.length batch
       |> Logger.log ri.logger
-      >>-. buildRequest batch
+      |> Job.start
+      >>- fun () -> buildRequest batch
       >>= getResponse
       >>= handleResponse ri batch
 
+    let saveWill : SumoState -> Job<unit> = box >> saveWill
+    let lastWill : SumoState option = Option.map unbox lastWill
+
     let rec init () : Job<unit> =
-      match Option.map unbox lastWill with
-      | Some (msgs, idx, recovered) ->
+      match lastWill with
+      | Some state ->
         Message.eventDebug "SumoLogic target failed; starting recovery"
         |> Logger.log ri.logger
-        >>=. recover msgs idx recovered
+        |> Job.start
+        >>= fun () -> recover state
       | None ->
         Message.eventVerbose "Starting SumoLogic target"
         |> Logger.log ri.logger
-        >>=. loop ()
-    and recover msgs idx recovered : Job<unit> =
-      if idx >= Array.length msgs then
+        |> Job.start
+        >>= loop
+    and recover ({ LastBatch = msgs; Health = health } as s) : Job<unit> =
+      let nextRecoveryState =
+        match health with
+        | Live -> { Index = 0u; FailedAttempts = 0u; Recovered = 0u }
+        | Recovering rs -> { rs with Index = rs.Index + 1u; FailedAttempts = rs.FailedAttempts + 1u }
+      if nextRecoveryState.Index >= uint32 ^ Array.length msgs then
         Message.eventDebug "SumoLogic target recovery complete; recovered {recovered} of {count} messages"
-        |> Message.setField "recovered" recovered
+        |> Message.setField "attempts" nextRecoveryState.FailedAttempts
+        |> Message.setField "recovered" nextRecoveryState.Recovered
         |> Message.setField "count" ^ Array.length msgs
         |> Logger.log ri.logger
-        >>=. loop ()
+        |> Job.start
+        >>= fun () -> saveWill ^ SumoState.empty
+        >>= loop
+      else if nextRecoveryState.FailedAttempts >= conf.maxRecoveryAttempts then
+        Message.eventDebug "SumoLogic target recovery failed after {attempts} attempts; recovered {recovered} of {count} messages"
+        |> Message.setField "attempts" nextRecoveryState.FailedAttempts
+        |> Message.setField "recovered" nextRecoveryState.Recovered
+        |> Message.setField "count" ^ Array.length msgs
+        |> Logger.log ri.logger
+        |> Job.start
+        >>= fun () -> saveWill ^ SumoState.empty
+        >>= loop
       else
-        let nextIdx = idx + 1
+        let nextStateIfSuccessful = { s with Health = Recovering { nextRecoveryState with Recovered = nextRecoveryState.Recovered + 1u } }
         Message.eventDebug "SumoLogic target recovery in progress; retrying message {index} of {count}"
-        |> Message.setField "index" (idx + 1)
+        |> Message.setField "index" (nextRecoveryState.Index + 1u)
         |> Message.setField "count" ^ Array.length msgs
         |> Logger.log ri.logger
-        >>=. saveWill ^ box ^ (msgs, nextIdx, recovered)
-        >>=. sendBatch [| msgs.[idx] |]
-        >>=. saveWill ^ box ^ (msgs, nextIdx, recovered + 1)
-        >>=. recover msgs nextIdx (recovered + 1)
+        |> Job.start
+        >>= fun () -> saveWill ^ { s with Health = Recovering nextRecoveryState }
+        >>= fun () -> sendBatch [| msgs.[int nextRecoveryState.Index] |]
+        >>= fun () -> saveWill ^ nextStateIfSuccessful
+        >>= fun () -> recover nextStateIfSuccessful
     and loop () : Job<unit> =
       asJob ^ Alt.choose
         [ shutdown ^=> fun ack -> ack *<= ()
 
           RingBuffer.takeBatch (uint32 conf.batchSize) messages ^=> fun msgs ->
-            saveWill ^ box ^ (msgs, 0, 0)
-            >>=. sendBatch msgs
+            saveWill ^ { SumoState.empty with LastBatch = msgs }
+            >>= fun () -> sendBatch msgs
+            >>= fun () -> saveWill ^ SumoState.empty
             >>= loop
         ]
     init ()

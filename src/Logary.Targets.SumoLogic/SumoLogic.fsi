@@ -11,6 +11,7 @@ type SumoLogicConf =
     endpoint : System.Uri
     templateHandling : TemplateHandlingConf
     batchSize : uint16
+    maxRecoveryAttempts : uint32
   }
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
