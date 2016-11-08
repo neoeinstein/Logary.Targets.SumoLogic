@@ -1,3 +1,6 @@
+## 0.1.2
+* Bump dependency versions
+
 ## 0.1.1
 * Recover from failures (using Logary wills)
 * Add service name to logged messages
