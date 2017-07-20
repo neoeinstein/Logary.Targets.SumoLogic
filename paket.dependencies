@@ -2,7 +2,7 @@ framework >= net35
 source https://nuget.org/api/v2
 
 nuget FSharp.Core >= 3.1.2.5 redirects: force
-nuget Logary >= 4.0.181 < 5
+nuget Logary >= 4.2 < 5
 nuget Http.Fs ~> 4.0
 
 group Build
