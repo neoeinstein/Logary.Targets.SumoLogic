@@ -1,4 +1,4 @@
-// --------------------------------------------------------------------------------------
+﻿// --------------------------------------------------------------------------------------
 // FAKE build script
 // --------------------------------------------------------------------------------------
 
@@ -84,6 +84,7 @@ Target "AssemblyInfo" (fun _ ->
           Attribute.Product project
           Attribute.Description summary
           Attribute.Version release.AssemblyVersion
+          Attribute.InformationalVersion release.AssemblyVersion
           Attribute.FileVersion release.AssemblyVersion ]
 
     let getProjectDetails projectPath =
