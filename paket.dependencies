@@ -1,12 +1,11 @@
 framework >= net35
-source https://nuget.org/api/v2
+source https://api.nuget.org/v3/index.json
 
-nuget FSharp.Core >= 3.1.2.5 redirects: force
-nuget Logary >= 4.0.181 < 5
-nuget Http.Fs ~> 4.0
+nuget Logary
+nuget Http.Fs
 
 group Build
-  source https://nuget.org/api/v2
+  source https://api.nuget.org/v3/index.json
 
   nuget SourceLink.Fake
   nuget FAKE
@@ -15,10 +14,10 @@ group Build
   github fsharp/FAKE modules/Octokit/Octokit.fsx
 
 group Test
-  source https://nuget.org/api/v2
+  source https://api.nuget.org/v3/index.json
 
-  nuget FsCheck ~> 2.6
-  nuget Fuchu ~> 1
-  nuget Unquote ~> 3.1
+  nuget FsCheck
+  nuget Fuchu
+  nuget Unquote
 
   github mausch/Fuchu Fuchu.FsCheck/FsCheck.fs
